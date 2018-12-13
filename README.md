@@ -2,10 +2,19 @@
 
 ## How to use?
 
-just run it:
-
 `go run main.go`
 
-### What is next?
 
-Nothing for now. Have fun 
+### Shortcuts
+
+Start/Pause: `Ctrl+S`
+
+New/Empty Screen: `Ctrl+N`
+
+Random Cells: `Ctrl+R`
+
+Active a cell: `Mouse Click`
+
+Speed Up: `Ctrl+I`
+
+Speed Down: `Ctrl+D`
