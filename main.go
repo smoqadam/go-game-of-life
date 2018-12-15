@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math"
 	"math/rand"
 	"strconv"
 	"time"
@@ -16,7 +15,7 @@ type Cell struct {
 }
 
 type GameOfLife struct {
-	cells      [][]Cell
+	cells      [][]bool
 	Generation int
 	Alives     int
 }
@@ -84,7 +83,7 @@ loop:
 			}
 			if ev.Type == termbox.EventMouse {
 				if ev.MouseX <= maxRow && ev.MouseY <= maxCol {
-					b.cells[ev.MouseY][ev.MouseX].Dead = false
+					b.cells[ev.MouseY][ev.MouseX] = false
 				}
 			}
 			b.Print()
@@ -103,7 +102,7 @@ loop:
 
 func initiate(random bool) *GameOfLife {
 	b := &GameOfLife{
-		cells: make([][]Cell, int(math.Max(float64(maxCol), float64(maxRow)))),
+		cells: make([][]bool, maxRow),
 	}
 	for i := 0; i <= maxCol; i++ {
 		for j := 0; j <= maxRow; j++ {
@@ -113,41 +112,33 @@ func initiate(random bool) *GameOfLife {
 					dead = false
 				}
 			}
-			c := Cell{
-				X:    i,
-				Y:    j,
-				Dead: dead,
-			}
-			b.cells[i] = append(b.cells[i], c)
+			b.cells[i] = append(b.cells[i], dead)
 		}
 	}
-
 	return b
 }
-func (b *GameOfLife) te() {
-	b.cells[0][0].Dead = true
-}
+
 func (b *GameOfLife) NextGen() {
-	duplicate := make([][]Cell, len(b.cells))
+	duplicate := make([][]bool, len(b.cells))
 	for i := range b.cells {
-		duplicate[i] = make([]Cell, len(b.cells[i]))
+		duplicate[i] = make([]bool, len(b.cells[i]))
 		copy(duplicate[i], b.cells[i])
 	}
 	b.Alives = 0
 	for i := 0; i <= maxCol; i++ {
 		for j := 0; j <= maxRow; j++ {
-			ncnt := b.Nighbors(b.cells[i][j])
+			ncnt := b.Nighbors(i, j)
 			if ncnt < 2 || ncnt > 3 {
-				duplicate[i][j].Dead = true
+				duplicate[i][j] = true
 			}
-			if b.cells[i][j].Dead && ncnt == 3 {
-				duplicate[i][j].Dead = false
+			if b.cells[i][j] && ncnt == 3 {
+				duplicate[i][j] = false
 			}
 			if ncnt == 2 {
 				duplicate[i][j] = b.cells[i][j]
 			}
 
-			if !duplicate[i][j].Dead {
+			if !duplicate[i][j] {
 				b.Alives++
 			}
 		}
@@ -156,11 +147,11 @@ func (b *GameOfLife) NextGen() {
 	b.cells = duplicate
 }
 
-func (b *GameOfLife) Nighbors(cell Cell) int {
+func (b *GameOfLife) Nighbors(x, y int) int {
 	cnt := 0
-	for x1 := cell.X - 1; x1 <= cell.X+1; x1++ {
-		for y1 := cell.Y - 1; y1 <= cell.Y+1; y1++ {
-			if x1 == cell.X && y1 == cell.Y {
+	for x1 := x - 1; x1 <= x+1; x1++ {
+		for y1 := y - 1; y1 <= y+1; y1++ {
+			if x1 == x && y1 == y {
 				continue
 			}
 			if x1 < 0 || x1 >= maxCol {
@@ -169,9 +160,10 @@ func (b *GameOfLife) Nighbors(cell Cell) int {
 			if y1 < 0 || y1 >= maxRow {
 				continue
 			}
-			if !b.cells[x1][y1].Dead {
+			if !b.cells[x1][y1] {
 				cnt++
 			}
+
 		}
 	}
 	return cnt
@@ -183,7 +175,7 @@ func (b *GameOfLife) Print() {
 	for i := 0; i <= maxCol; i++ {
 		for j := 0; j <= maxRow; j++ {
 			ch := '█'
-			if b.cells[i][j].Dead {
+			if b.cells[i][j] {
 				ch = '░'
 			}
 			termbox.SetCell(j, i, ch, termbox.ColorDefault, termbox.ColorDefault)
